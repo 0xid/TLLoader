@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">TLLoader for Zenfon 2</string>
+    <string name="text1">Проверка файлов</string>
+    <string name="pathFrom">ifwi</string>
+    <string name="pathTo">/system/bin</string>
+    <string name="flashifwi">flash-ifwi</string>
+    <string name="iflocked">if-locked.bin</string>
+    <string name="ifunlocked">if-unlocked.bin</string>
+    <string name="switch1">Готовность</string>
+    <string name="startBtn">locked</string>
+    <string name="unlocked">unlocked</string>
+    <string name="md5Loked">cfcd208495d565ef66e7dff9f98764da</string>
+    <string name="md5UnLoked">c4ca4238a0b923820dcc509a6f75849b</string>
+    <string name="fileTestOne">/sys/block/mmcblk0boot0/force_ro</string>
+    <string name="fileTestTwo">/sys/block/mmcblk0boot1/force_ro</string>
+    <string name="iamgod">I\'m God</string>
+    <string name="reboot">Reboot</string>
+</resources>
