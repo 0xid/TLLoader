@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">TLLoader for Zenfon 2</string>
+    <string name="app_name">TLLoader for Zenfone 2 ZE551ML</string>
     <string name="text1">Проверка файлов</string>
     <string name="pathFrom">ifwi</string>
     <string name="pathTo">/system/bin</string>

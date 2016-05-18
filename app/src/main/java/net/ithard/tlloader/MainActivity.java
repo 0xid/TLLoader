@@ -1,12 +1,15 @@
 package net.ithard.tlloader;
 
 import android.content.ComponentName;
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.os.Process;
 import android.provider.MediaStore;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Layout;
@@ -38,6 +41,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Button unBtn;
     Button reboot;
     Process p;
+    String dirRoot;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +49,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
 
         textView = (TextView) findViewById(R.id.textView);
+
+        dirRoot = getFilesDir().getAbsolutePath();
 
         //События - инит
         switch1 = (Switch) findViewById(R.id.switch1);
@@ -73,6 +79,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (isDirAndFiles()) {
             switch1.setEnabled(true);
         }
+        checkingDevice();
     }
 
     @Override
@@ -82,8 +89,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if(switch1.isChecked()){
                     if(isLoked()) {
                         unBtn.setEnabled(true);
+                        textView.setText("Current state: Locked");
+                        textView.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.accent_material_light));
                     }else {
                         startBtn.setEnabled(true);
+                        textView.setText("Current state: UnLocked");
+                        textView.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.accent_material_light));
                     }
                     switch2.setEnabled(true);
                 }else{
@@ -126,6 +137,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     unBtn.setEnabled(false);
                     switch2.setEnabled(false);
                     switch2.setChecked(false);
+                    textView.setText("Press \"REBOOT\"");
+                    textView.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorAccent));
                 } catch (IOException e) {
                     textView.setText("Ошибка: "+e.getMessage());
                     textView.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorAccent));
@@ -139,31 +152,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private boolean isDirAndFiles(){
-        Boolean pathFrom = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/"+getString(R.string.pathFrom)).isDirectory();
+        Boolean pathFrom = new File(dirRoot+"/"+getString(R.string.pathFrom)).isDirectory();
         if(!pathFrom){
-            textView.setText("Нет директории: " + Environment.getExternalStorageDirectory().getAbsolutePath()+"/"+getString(R.string.pathFrom));
+            textView.setText("Нет директории: " + dirRoot+"/"+getString(R.string.pathFrom));
             textView.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorAccent));
             return false;
         }
-        Boolean flashifwi = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/"+getString(R.string.pathFrom)+"/"+getString(R.string.flashifwi)).exists();
+        Boolean flashifwi = new File(dirRoot+"/"+getString(R.string.pathFrom)+"/"+getString(R.string.flashifwi)).exists();
         if(!flashifwi){
-            textView.setText("Нет файла: " + Environment.getExternalStorageDirectory().getAbsolutePath()+"/"+getString(R.string.pathFrom)+"/"+getString(R.string.flashifwi));
+            textView.setText("Нет файла: " + dirRoot+"/"+getString(R.string.pathFrom)+"/"+getString(R.string.flashifwi));
             textView.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorAccent));
             return false;
         }
-        Boolean iflocked = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/"+getString(R.string.pathFrom)+"/"+getString(R.string.iflocked)).isFile();
+        Boolean iflocked = new File(dirRoot+"/"+getString(R.string.pathFrom)+"/"+getString(R.string.iflocked)).isFile();
         if(!iflocked){
-            textView.setText("Нет файла: " + Environment.getExternalStorageDirectory().getAbsolutePath()+"/"+getString(R.string.pathFrom)+"/"+getString(R.string.iflocked));
+            textView.setText("Нет файла: " + dirRoot+"/"+getString(R.string.pathFrom)+"/"+getString(R.string.iflocked));
             textView.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorAccent));
             return false;
         }
-        Boolean ifunlocked = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/"+getString(R.string.pathFrom)+"/"+getString(R.string.ifunlocked)).isFile();
+        Boolean ifunlocked = new File(dirRoot+"/"+getString(R.string.pathFrom)+"/"+getString(R.string.ifunlocked)).isFile();
         if(!ifunlocked){
-            textView.setText("Нет файла: " + Environment.getExternalStorageDirectory().getAbsolutePath()+"/"+getString(R.string.pathFrom)+"/"+getString(R.string.ifunlocked));
+            textView.setText("Нет файла: " + dirRoot+"/"+getString(R.string.pathFrom)+"/"+getString(R.string.ifunlocked));
             textView.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorAccent));
             return false;
         }
-        textView.setText("Все файлы на месте: " + "'" + getString(R.string.flashifwi) + "', '" + getString(R.string.iflocked) + "', '" + getString(R.string.ifunlocked) + "'");
+        textView.setText("Все файлы на месте: " + "\n" + getString(R.string.flashifwi) + "\n" + getString(R.string.iflocked) + "\n" + getString(R.string.ifunlocked));
         textView.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.accent_material_light));
         return true;
     }
@@ -195,28 +208,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void locked() throws IOException {
         textView.setText("");
-        String path = "/data/media/0/"+getString(R.string.pathFrom);
+        String path = dirRoot+"/"+getString(R.string.pathFrom);
         String fileStart = path+"/"+getString(R.string.flashifwi);
         String fileBin = path+"/"+getString(R.string.iflocked);
 
         String[] comm = new String[]{"su", "-", "root", "-c", "chmod", "777", fileStart};
         String runCmd = suExec(comm);
 
-        //flash-ifwi --flash-ifwi /storage/emulated/0/ifwi/if-locked.bin
         comm = new String[]{"su", "-", "root", "-c", fileStart, "--flash-ifwi", fileBin};
         runCmd = suExec(comm);
     }
 
     private void unlocked() throws IOException {
         textView.setText("");
-        String path = "/data/media/0/"+getString(R.string.pathFrom);
+        String path = dirRoot+"/"+getString(R.string.pathFrom);
         String fileStart = path+"/"+getString(R.string.flashifwi);
         String fileBin = path+"/"+getString(R.string.ifunlocked);
 
         String[] comm = new String[]{"su", "-", "root", "-c", "chmod", "777", fileStart};
         String runCmd = suExec(comm);
 
-        ////flash-ifwi --flash-ifwi /storage/emulated/0/ifwi/if-locked.bin
         comm = new String[]{"su", "-", "root", "-c", fileStart, "--flash-ifwi", fileBin};
         runCmd = suExec(comm);
     }
@@ -253,7 +264,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         InputStream ins = getResources().openRawResource(resId);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         int size = 0;
-// Read the entire resource into a local byte buffer.
         byte[] buffer = new byte[1024];
         while( (size = ins.read(buffer,0,1024) ) >= 0 ){
             outputStream.write(buffer,0,size);
@@ -266,27 +276,52 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void initFiles(){
-        Boolean dir = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/"+getString(R.string.pathFrom)).isDirectory();
+        Boolean dir = new File(dirRoot+"/"+getString(R.string.pathFrom)).isDirectory();
         if(!dir){
-            new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/"+getString(R.string.pathFrom)).mkdir();
+            new File(dirRoot+"/"+getString(R.string.pathFrom)).mkdir();
         }
-        String fileFlashifwi = Environment.getExternalStorageDirectory().getAbsolutePath()+"/"+getString(R.string.pathFrom)+"/"+getString(R.string.flashifwi);
+        String fileFlashifwi = dirRoot+"/"+getString(R.string.pathFrom)+"/"+getString(R.string.flashifwi);
         try {
             saveResource(R.raw.flashifwi, fileFlashifwi);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        String fieIfLocked = Environment.getExternalStorageDirectory().getAbsolutePath()+"/"+getString(R.string.pathFrom)+"/"+getString(R.string.iflocked);
+        String fieIfLocked = dirRoot+"/"+getString(R.string.pathFrom)+"/"+getString(R.string.iflocked);
         try {
             saveResource(R.raw.iflocked, fieIfLocked);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        String fileIfUnLocked = Environment.getExternalStorageDirectory().getAbsolutePath()+"/"+getString(R.string.pathFrom)+"/"+getString(R.string.ifunlocked);
+        String fileIfUnLocked = dirRoot+"/"+getString(R.string.pathFrom)+"/"+getString(R.string.ifunlocked);
         try {
             saveResource(R.raw.ifunlocked, fileIfUnLocked);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public void checkingDevice(){
+        String device = "Z00A";
+        String msg = "This app was tested on ASUS Z00A (ZE551ML).\n" +
+            "Your device: "+Build.DEVICE+"\n" + "Continued use, your risks!" + "\n\n" +
+            "Это приложение тестировалось на ASUS Z00A (ZE551ML).\n" +
+            "Ваше устройство: "+Build.DEVICE+"\n" +
+            "Дальнейшее использование, на свой страх и риск!";
+        if(!Build.DEVICE.equals(device)){
+            AlertDialog.Builder alBuild = new AlertDialog.Builder(this);
+            alBuild.setTitle("Warning: Your device model!");
+            alBuild.setMessage(msg);
+            alBuild.setIcon(R.drawable.high_priority_96);
+            alBuild.setPositiveButton(
+                "I'm Crazy :)",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                    }
+                }
+            );
+            AlertDialog alertDevice = alBuild.create();
+            alertDevice.show();
         }
     }
 }
